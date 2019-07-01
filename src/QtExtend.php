@@ -18,16 +18,26 @@ class QtExtend extends LibraryInstaller
     {
         if ($this->composer->getPackage()->getType() == 'project') {
             $extra = $package->getExtra();
-            if (!empty($extra['qt-config'])) {
+            if (!empty($extra['qt-extend'])) {
                 $composerExtra = $this->composer->getPackage()->getExtra();
                 $appDir = !empty($composerExtra['app-path']) ? $composerExtra['app-path'] : 'application';
                 if (is_dir($appDir)) {
                     $extraDir = $appDir . DIRECTORY_SEPARATOR . 'extra';
                     $this->filesystem->ensureDirectoryExists($extraDir);
+                    $appControllerDir = $appDir . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'controller';
+                    $this->filesystem->ensureDirectoryExists($appControllerDir);
                     //配置文件
-                    foreach ((array)$extra['qt-config'] as $name => $config) {
-                        $target = $extraDir . DIRECTORY_SEPARATOR . $name . '.php';
-                        $source = $this->getInstallPath($package) . DIRECTORY_SEPARATOR . $config;
+                    foreach ((array)$extra['qt-extend'] as $config) {
+                        if (!isset($config['type'])) {
+                            continue;
+                        }
+                        if ($config['type'] == 'config') {
+                            $target = $extraDir . DIRECTORY_SEPARATOR . $config['to'] . '.php';
+                        } elseif ($config['type'] == 'app-controller') {
+                            $target = $appControllerDir . DIRECTORY_SEPARATOR . $config['to'] . '.php';
+                        }
+
+                        $source = $this->getInstallPath($package) . DIRECTORY_SEPARATOR . $config['from'];
                         if (is_file($target)) {
                             $this->io->write("<info>File {$target} exist!</info>");
                             continue;
